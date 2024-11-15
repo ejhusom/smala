@@ -109,7 +109,7 @@ def main():
             active_memories = memory_manager.get_active_memories()
             memory_context = "Here are some memories from previous conversations (use these to be as helpful as possible when relevant):\n"
             memory_context += "\n".join([m["content"] for m in active_memories])
-            messages = {"role": "system", "content": memory_context}
+            messages = [{"role": "system", "content": memory_context}]
 
             # Append the entire conversation history (including user's and assistant's messages)
             messages.extend(conversation)
