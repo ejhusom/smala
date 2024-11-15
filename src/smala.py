@@ -134,8 +134,9 @@ def main():
             messages.extend(conversation)
 
             print("----------")
+
             # Send the entire message history (system + conversation) to the API
-            if llm.stream:
+            if llm.settings.get("stream"):
                 response = llm.generate_streaming_response(messages)
             else:
                 response = llm.generate_response(messages)
