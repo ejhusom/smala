@@ -9,34 +9,35 @@ from datetime import datetime
 
 
 def load_conversation_from_file(file_path):
-    """ Load a conversation from a JSON file """
+    """Load a conversation from a JSON file."""
     if not os.path.exists(file_path):
         print(f"Warning: No existing conversation found at {file_path}. Starting a new conversation.")
         return []
 
     with open(file_path, "r") as file:
         conversation = json.load(file)
+
     return conversation
 
 
 def save_conversation_to_file(conversation, file_path):
-    """ Save the conversation to a JSON file """
+    """Save the conversation to a JSON file"""
     with open(file_path, "w") as file:
         json.dump(conversation, file, indent=2)
 
 
 def summarize_and_save(conversation, memory_manager, conversation_file):
-    """ Summarize the conversation and save it to memories """
+    """Summarize the conversation and save it to memories."""
     llm = LLMInterface()
     conversation_text = "\n".join([entry["content"] for entry in conversation])
-    summary = llm.generate_response([prompt2json(f"Summarize the following conversation:\n{conversation_text}")])
+    summary = llm.generate_response([{"role": "user", "content": f"Summarize the following conversation:\n{conversation_text}"}])
 
     if summary:
-        memory_manager.add_memory(content=summary, category="conversation_summary", priority=5)
+        memory_manager.add_memory(content=summary, category="conversation_summary", priority=llm.settings.get("priority_conversation_summaries"))
         print("Assistant: The conversation has been summarized and saved.")
 
         # Add summary to conversation as well
-        conversation.append(prompt2json(summary, role="assistant"))
+        conversation.append({"role": "assistant", "content": summary})
 
         save_conversation_to_file(conversation, conversation_file)
 
@@ -44,7 +45,7 @@ def summarize_and_save(conversation, memory_manager, conversation_file):
 
 
 def handle_exit(conversation, memory_manager, conversation_file, signal, frame):
-    """ Graceful exit handler to summarize and save the conversation """
+    """Graceful exit handler to summarize and save the conversation """
     print("\nGracefully shutting down.")
     print("Summarizing conversation...")
     summarize_and_save(conversation, memory_manager, conversation_file)
@@ -67,24 +68,8 @@ def get_multiline_input(line=""):
         lines.append(line)
     return "\n".join(lines)  # Combine all lines into a single string
 
-
-def main():
-    # Set up the argument parser
-    parser = argparse.ArgumentParser(description="Start a conversation with the LLM assistant.")
-    parser.add_argument(
-        "--conversation-file",
-        "-f",
-        type=str,
-        help="Path to a previous conversation file to continue.",
-        default=None
-    )
-    args = parser.parse_args()
-
-    # Set up the memory manager and LLM interface
-    llm = LLMInterface()
-    memory_manager = MemoryManager()
-
-    # Load conversation history if a file is provided
+def initialize_conversation(args):
+    """Initialize conversation from file or create a new conversation file path."""
     if args.conversation_file:
         conversation = load_conversation_from_file(args.conversation_file)
         conversation_file = args.conversation_file
@@ -93,23 +78,74 @@ def main():
         conversation_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         conversation_file = f"conversations/{conversation_id}.json"
         os.makedirs(os.path.dirname(conversation_file), exist_ok=True)
+    return conversation, conversation_file
 
-    # Register signal handler for graceful shutdown (Ctrl+C or exit command)
+
+def process_conversation(prompt, llm, conversation, memory_manager, conversation_file):
+    """Process a single conversation turn, including memory and assistant response handling."""
+    # Include user input in the conversation
+    conversation.append({"role": "user", "content": prompt})
+
+    messages = [
+        {"role": "system", "content": llm.system_message},
+        {"role": "user", "content": memory_manager.build_memory_context()},
+        {"role": "assistant", "content": "I'm aware of these memories, and will use relevant information from them when needed to assist you in the best possible way."}
+    ]
+    # Append conversation history
+    messages.extend(conversation)
+
+    # Send the message history to the API
+    print("--------------------")
+    if llm.settings.get("stream"):
+        response = llm.generate_streaming_response(messages)
+    else:
+        response = llm.generate_response(messages)
+        print(f"Assistant: {response}")
+
+    # Append response and save conversation
+    if response:
+        conversation.append({"role": "assistant", "content": response})
+        save_conversation_to_file(conversation, conversation_file)
+    else:
+        print("Assistant: Sorry, I couldn’t process that request.")
+    print("====================")
+
+
+def main():
+    # Parse arguments and initialize conversation, LLM interface, and memory manager
+    parser = argparse.ArgumentParser(description="Start a conversation with the LLM assistant.")
+    parser.add_argument(
+        "--conversation-file", "-f",
+        type=str,
+        help="Path to a previous conversation file to continue.",
+        default=None
+    )
+    args = parser.parse_args()
+
+    # Initialize components
+    llm = LLMInterface()
+    memory_manager = MemoryManager(llm=llm)
+    conversation, conversation_file = initialize_conversation(args)
+
+    # Register signal handler for graceful shutdown (Ctrl+C)
     signal.signal(signal.SIGINT, lambda signal, frame: handle_exit(conversation, memory_manager, conversation_file, signal, frame))
 
     print("Welcome to the Local LLM Assistant!")
-    print("Type '\"\"\"' to start multi-line input mode. Type '/exit' to exit.")
+    print("Type '\"\"\"' to start multi-line input mode.")
+    print("Type '/remember' as part of a prompt to store a summary of it, or type only '/remember' to save a summary of the last prompt.")
+    print("Type '/exit' to exit.")
 
-    try:
-        while True:
+
+    while True:
+        try:
             prompt = input(">>> ")
 
-            # Check if the user wants to start multi-line mode
+            # Multi-line mode check
             if prompt.strip().startswith('"""'):
-                prompt = get_multiline_input(prompt.replace("\"\"\"", ""))  # Switch to multi-line input mode
+                prompt = get_multiline_input(prompt.replace("\"\"\"", "")) 
 
             if prompt.lower() == "/exit":
-                # Ask the user if they want to summarize the conversation
+                # Exit handling
                 summary_response = input("Would you like to summarize the conversation? (y/n): ")
                 if summary_response.lower() == "y":
                     print("Summarizing conversation...")
@@ -119,43 +155,29 @@ def main():
                     print("Conversation not summarized. Exiting...")
                 sys.exit(0)
 
-            # Include user input in the conversation
-            conversation.append({"role": "user", "content": prompt})
+            # Handle the /remember command
+            if "/remember" in prompt:
+                if prompt.strip() == "/remember":
+                    # Remember the previous prompt if available
+                    last_user_message = conversation[-1]["content"] if conversation else ""
+                    if last_user_message:
+                        memory_manager.remember(last_user_message)
+                else:
+                    # Remember the current prompt, minus the /remember part
+                    memory_content = prompt.replace("/remember", "").strip()
+                    memory_manager.remember(
+                                memory_content, 
+                                category="imperative_memory",
+                                priority=llm.settings.get("priority_imperative_memories")
+                    )
 
-            messages = [{"role": "system", "content": llm.system_message}]
 
-            # Include active memories in the prompt context
-            active_memories = memory_manager.get_active_memories()
-            memory_context = "Here are some memories from previous conversations (use these to be as helpful as possible when relevant):\n"
-            memory_context += "\n".join([m["content"] for m in active_memories])
-            messages.append({"role": "system", "content": memory_context})
+            # Process the conversation turn
+            process_conversation(prompt, llm, conversation, memory_manager, conversation_file)
 
-            # Append the entire conversation history (including user's and assistant's messages)
-            messages.extend(conversation)
-
-            print("--------------------")
-
-            # Send the entire message history (system + conversation) to the API
-            if llm.settings.get("stream"):
-                response = llm.generate_streaming_response(messages)
-            else:
-                response = llm.generate_response(messages)
-                print(f"Assistant: {response}")
-
-            # Get the response based on the full message history
-            if response:
-                conversation.append({"role": "assistant", "content": response})
-
-                # Optionally store the conversation in the file as we go
-                save_conversation_to_file(conversation, conversation_file)
-            else:
-                print("Assistant: Sorry, I couldn’t process that request.")
-
-            print("====================")
-
-    except EOFError:
-        print("\nReceived EOF signal (Ctrl+D).")
-        handle_exit(conversation, memory_manager, conversation_file, None, None)
+        except EOFError:
+            print("\nReceived EOF signal (Ctrl+D).")
+            handle_exit(conversation, memory_manager, conversation_file, None, None)
 
 
 if __name__ == "__main__":
