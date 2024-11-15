@@ -1,4 +1,5 @@
 import requests
+import json
 import yaml
 
 # Load settings from YAML
@@ -35,6 +36,53 @@ class LLMInterface:
             response = requests.post(self.api_url, json=data)
             response.raise_for_status()  # Raises HTTPError for bad responses
             return response.json().get("message").get("content")
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+
+    def generate_streaming_response(self, message_history):
+        """Generate a streaming response and return the full content"""
+
+        if isinstance(message_history, str):
+            message_history = [message_history]
+
+        if not isinstance(message_history, list):
+            raise ValueError("Message history should be a list of messages")
+
+        # Prepare the data for the API request with streaming enabled
+        data = {
+            "model": self.model,
+            "system_message": self.system_message,
+            "messages": message_history,
+            "stream": True
+        }
+
+        full_response = []  # To accumulate the full response
+
+        try:
+            response = requests.post(self.api_url, json=data, stream=True)
+            response.raise_for_status()  # Raises HTTPError for bad responses
+
+            print("Assistant: ", end="", flush=True)
+            for chunk in response.iter_lines():
+                if chunk:
+                    try:
+                        chunk_data = json.loads(chunk.decode("utf-8"))
+                        message_content = chunk_data.get("message", {}).get("content", "")
+                        print(message_content, end="", flush=True)
+
+                        # Append content to the full response
+                        full_response.append(message_content)
+
+                        if chunk_data.get("done"):
+                            break
+                    except json.JSONDecodeError as e:
+                        print("\nError decoding JSON:", e)
+            print("\n")  # Newline after streaming ends
+
+            # Return the full response as a single string
+            return "".join(full_response)
+
         except requests.exceptions.RequestException as e:
             print(f"Request failed: {e}")
             return None

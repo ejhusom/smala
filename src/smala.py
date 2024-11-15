@@ -133,20 +133,24 @@ def main():
             # Append the entire conversation history (including user's and assistant's messages)
             messages.extend(conversation)
 
+            print("----------")
             # Send the entire message history (system + conversation) to the API
-            response = llm.generate_response(messages)
+            if llm.stream:
+                response = llm.generate_streaming_response(messages)
+            else:
+                response = llm.generate_response(messages)
+                print(f"Assistant: {response}")
 
             # Get the response based on the full message history
             if response:
-                print("----------")
-                print(f"Assistant: {response}")
-                print("==========")
                 conversation.append({"role": "assistant", "content": response})
 
                 # Optionally store the conversation in the file as we go
                 save_conversation_to_file(conversation, conversation_file)
             else:
                 print("Assistant: Sorry, I couldn’t process that request.")
+
+            print("==========")
 
     except KeyboardInterrupt:
         # Handle unexpected shutdown (Ctrl+C)

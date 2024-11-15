@@ -1,5 +1,6 @@
 api_url: "http://localhost:11434/api/chat"   # API endpoint for local LLM (Ollama)
-default_model: "llama3.2"
+default_model: "qwen2"
 system_message: "You are a helpful assistant. Respond concisely and informatively."
+stream: True
 memory_decay_threshold: 2  # Minimum priority to include memory in context
 decay_period: 30  # Days before decay is applied
