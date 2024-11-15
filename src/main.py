@@ -56,6 +56,7 @@ def prompt2json(prompt, role="user"):
     """Convert a prompt string to a JSON object"""
     return {"role": role, "content": prompt}
 
+
 def get_multiline_input(line=""):
     """Allow multi-line input using triple quotes to start and end."""
     lines = [line]
@@ -65,6 +66,7 @@ def get_multiline_input(line=""):
             break
         lines.append(line)
     return "\n".join(lines)  # Combine all lines into a single string
+
 
 def main():
     # Set up the argument parser
