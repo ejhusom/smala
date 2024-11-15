@@ -12,12 +12,14 @@ class LLMInterface:
         self.settings = load_settings()
         self.api_url = self.settings.get("api_url")
         self.model = self.settings.get("default_model")
+        self.system_message = self.settings.get("system_message")  # Get system message from settings
 
-    def generate_response(self, prompt):
-        # Send prompt to the LLM API and get a response
+    def generate_response(self, message_history):
+        """Generate a response based on the message history"""
+        # Prepare the data for the API request
         data = {
             "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": message_history,
             "stream": False
         }
 

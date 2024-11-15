@@ -1,4 +1,5 @@
 __pycache__/
 venv/
-memories/
 *.swp
+memories/
+conversations/
