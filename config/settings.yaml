@@ -1,0 +1,4 @@
+api_url: "http://localhost:11434/api/chat"   # API endpoint for local LLM (Ollama)
+default_model: "llama3.2"
+memory_decay_threshold: 2  # Minimum priority to include memory in context
+decay_period: 30  # Days before decay is applied
