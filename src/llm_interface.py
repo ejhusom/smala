@@ -16,12 +16,23 @@ class LLMInterface:
 
     def generate_response(self, message_history):
         """Generate a response based on the message history"""
+
+        if isinstance(message_history, str):
+            message_history = [message]
+
+        if not isinstance(message_history, list):
+            raise ValueError("Message history should be a list of messages")
+
         # Prepare the data for the API request
         data = {
             "model": self.model,
+            "system_message": self.system_message,
             "messages": message_history,
             "stream": False
         }
+        
+        print(data)
+        print("================")
 
         try:
             response = requests.post(self.api_url, json=data)

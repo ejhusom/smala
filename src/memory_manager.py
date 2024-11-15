@@ -28,11 +28,13 @@ class MemoryManager:
             yaml.dump({"memories": self.memories}, file)
 
     def add_memory(self, content, category="general", priority=3):
+        timestamp = datetime.now().isoformat()
+        memory_prefix = "This is a memory from a conversation held on {timestamp}: "
         new_memory = {
-            "content": content,
+            "content": memory_prefix + content,
             "category": category,
             "priority": priority,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": timestamp,
             "active": True
         }
         self.memories.append(new_memory)

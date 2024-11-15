@@ -2,53 +2,59 @@ import argparse
 import os
 import signal
 import sys
+import json
 from llm_interface import LLMInterface
 from memory_manager import MemoryManager
 from datetime import datetime
 
 
 def load_conversation_from_file(file_path):
-    """ Load a conversation from a file """
+    """ Load a conversation from a JSON file """
     if not os.path.exists(file_path):
         print(f"Warning: No existing conversation found at {file_path}. Starting a new conversation.")
         return []
 
-    conversation = []
     with open(file_path, "r") as file:
-        lines = file.readlines()
-        for line in lines:
-            role, content = line.split(":", 1)
-            conversation.append({"role": role.strip(), "content": content.strip()})
+        conversation = json.load(file)
     return conversation
 
 
 def save_conversation_to_file(conversation, file_path):
-    """ Save the conversation to a text file """
+    """ Save the conversation to a JSON file """
     with open(file_path, "w") as file:
-        for entry in conversation:
-            file.write(f"{entry['role']}: {entry['content']}\n")
+        json.dump(conversation, file, indent=2)
 
 
-def summarize_and_save(conversation, memory_manager):
+def summarize_and_save(conversation, memory_manager, conversation_file):
     """ Summarize the conversation and save it to memories """
     llm = LLMInterface()
     conversation_text = "\n".join([entry["content"] for entry in conversation])
-    summary = llm.generate_response(f"Summarize the following conversation:\n{conversation_text}")
+    summary = llm.generate_response([prompt2json(f"Summarize the following conversation:\n{conversation_text}")])
 
     if summary:
         memory_manager.add_memory(content=summary, category="conversation_summary", priority=5)
         print("Assistant: The conversation has been summarized and saved.")
 
+        # Add summary to conversation as well
+        conversation.append(prompt2json(summary, role="assistant"))
+
+        save_conversation_to_file(conversation, conversation_file)
+
     return summary
 
 
-def handle_exit(signal, frame):
+def handle_exit(conversation, memory_manager, conversation_file, signal, frame):
     """ Graceful exit handler to summarize and save the conversation """
-    print("\nGracefully shutting down. Summarizing conversation...")
-    summarize_and_save(conversation, memory_manager)
-    save_conversation_to_file(conversation, conversation_file)
+    print("\nGracefully shutting down.")
+    print("Summarizing conversation...")
+    summarize_and_save(conversation, memory_manager, conversation_file)
+    print("Conversation summary saved. Exiting...")
     sys.exit(0)
 
+
+def prompt2json(prompt, role="user"):
+    """Convert a prompt string to a JSON object"""
+    return {"role": role, "content": prompt}
 
 def main():
     # Set up the argument parser
@@ -73,11 +79,11 @@ def main():
     else:
         conversation = []
         conversation_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-        conversation_file = f"conversations/{conversation_id}.txt"
+        conversation_file = f"conversations/{conversation_id}.json"
         os.makedirs(os.path.dirname(conversation_file), exist_ok=True)
 
     # Register signal handler for graceful shutdown (Ctrl+C or exit command)
-    signal.signal(signal.SIGINT, handle_exit)
+    signal.signal(signal.SIGINT, lambda signal, frame: handle_exit(conversation, memory_manager, conversation_file, signal, frame))
 
     print("Welcome to the Local LLM Assistant!")
 
@@ -87,28 +93,34 @@ def main():
         while True:
             prompt = input("\nYou: ")
 
-            if prompt.lower() == "exit":
-                print("Goodbye!")
-                break
+            if prompt.lower() == "/exit":
+                # Ask the user if they want to summarize the conversation
+                summary_response = input("Would you like to summarize the conversation? (y/n): ")
+                if summary_response.lower() == "y":
+                    print("Summarizing conversation...")
+                    summarize_and_save(conversation, memory_manager, conversation_file)
+                    print("Conversation summary saved. Exiting...")
+                else:
+                    print("Conversation not summarized. Exiting...")
+                sys.exit(0)
+            
+            message_history = []
 
-            # Save the user message as part of the conversation
             conversation.append({"role": "user", "content": prompt})
-
-            # Add system message as the first message in the history
-            message_history = [{"role": "system", "content": llm.system_message}] 
 
             if first_prompt:
                 # Include active memories in the prompt context
                 active_memories = memory_manager.get_active_memories()
-                memory_context = "\n".join([m["content"] for m in active_memories])
+                memory_context = "Here are some memories from previous conversations (use these to be as helpful as possible when relevant):\n"
+                memory_context += "\n".join([m["content"] for m in active_memories])
                 message_history.append({"role": "system", "content": memory_context})
                 first_prompt = False  # Mark first prompt as processed
 
             message_history.extend(conversation)
 
-            # Get the response based on the full message history
             response = llm.generate_response(message_history)
 
+            # Get the response based on the full message history
             if response:
                 print(f"Assistant: {response}")
                 conversation.append({"role": "assistant", "content": response})
@@ -120,10 +132,8 @@ def main():
 
     except KeyboardInterrupt:
         # Handle unexpected shutdown (Ctrl+C)
-        print("\nProgram interrupted, summarizing conversation...")
-        summarize_and_save(conversation, memory_manager)
-        save_conversation_to_file(conversation, conversation_file)
-        print("Conversation summary saved. Exiting...")
+        print("\nProgram interrupted.")
+        handle_exit(conversation, memory_manager, conversation_file, None, None)
 
 if __name__ == "__main__":
     main()
