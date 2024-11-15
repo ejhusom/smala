@@ -133,7 +133,7 @@ def main():
             # Append the entire conversation history (including user's and assistant's messages)
             messages.extend(conversation)
 
-            print("----------")
+            print("--------------------")
 
             # Send the entire message history (system + conversation) to the API
             if llm.settings.get("stream"):
@@ -151,12 +151,12 @@ def main():
             else:
                 print("Assistant: Sorry, I couldn’t process that request.")
 
-            print("==========")
+            print("====================")
 
-    except KeyboardInterrupt:
-        # Handle unexpected shutdown (Ctrl+C)
-        print("\nProgram interrupted.")
+    except EOFError:
+        print("\nReceived EOF signal (Ctrl+D).")
         handle_exit(conversation, memory_manager, conversation_file, None, None)
+
 
 if __name__ == "__main__":
     main()
