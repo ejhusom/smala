@@ -56,6 +56,16 @@ def prompt2json(prompt, role="user"):
     """Convert a prompt string to a JSON object"""
     return {"role": role, "content": prompt}
 
+def get_multiline_input(line=""):
+    """Allow multi-line input using triple quotes to start and end."""
+    lines = [line]
+    while True:
+        line = input(">>> ")
+        if line.strip() == '"""':  # End multi-line input if '"""' is typed
+            break
+        lines.append(line)
+    return "\n".join(lines)  # Combine all lines into a single string
+
 def main():
     # Set up the argument parser
     parser = argparse.ArgumentParser(description="Start a conversation with the LLM assistant.")
@@ -86,10 +96,15 @@ def main():
     signal.signal(signal.SIGINT, lambda signal, frame: handle_exit(conversation, memory_manager, conversation_file, signal, frame))
 
     print("Welcome to the Local LLM Assistant!")
+    print("Type '\"\"\"' to start multi-line input mode. Type '/exit' to exit.")
 
     try:
         while True:
-            prompt = input("\nYou: ")
+            prompt = input(">>> ")
+
+            # Check if the user wants to start multi-line mode
+            if prompt.strip().startswith('"""'):
+                prompt = get_multiline_input(prompt.replace("\"\"\"", ""))  # Switch to multi-line input mode
 
             if prompt.lower() == "/exit":
                 # Ask the user if they want to summarize the conversation
@@ -105,11 +120,13 @@ def main():
             # Include user input in the conversation
             conversation.append({"role": "user", "content": prompt})
 
+            messages = [{"role": "system", "content": llm.system_message}]
+
             # Include active memories in the prompt context
             active_memories = memory_manager.get_active_memories()
             memory_context = "Here are some memories from previous conversations (use these to be as helpful as possible when relevant):\n"
             memory_context += "\n".join([m["content"] for m in active_memories])
-            messages = [{"role": "system", "content": memory_context}]
+            messages.append({"role": "system", "content": memory_context})
 
             # Append the entire conversation history (including user's and assistant's messages)
             messages.extend(conversation)
@@ -119,7 +136,9 @@ def main():
 
             # Get the response based on the full message history
             if response:
+                print("----------")
                 print(f"Assistant: {response}")
+                print("==========")
                 conversation.append({"role": "assistant", "content": response})
 
                 # Optionally store the conversation in the file as we go
@@ -131,8 +150,6 @@ def main():
         # Handle unexpected shutdown (Ctrl+C)
         print("\nProgram interrupted.")
         handle_exit(conversation, memory_manager, conversation_file, None, None)
-
-
 
 if __name__ == "__main__":
     main()

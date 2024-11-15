@@ -31,9 +31,6 @@ class LLMInterface:
             "stream": False
         }
         
-        print(data)
-        print("================")
-
         try:
             response = requests.post(self.api_url, json=data)
             response.raise_for_status()  # Raises HTTPError for bad responses
