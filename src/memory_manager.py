@@ -1,9 +1,9 @@
 import os
-import yaml
+import json
 from datetime import datetime, timedelta
 
 class MemoryManager:
-    def __init__(self, memory_file="memories/memory.yaml", decay_threshold=2, decay_days=30, llm=None):
+    def __init__(self, memory_file="memories/memory.json", decay_threshold=2, decay_days=30, llm=None):
         self.memory_file = memory_file
         self.decay_threshold = decay_threshold
         self.decay_days = decay_days
@@ -11,22 +11,21 @@ class MemoryManager:
         self.memories = self.load_memories()
 
     def load_memories(self):
+        """Load memories from a JSON file."""
         # Ensure the directory exists
         os.makedirs(os.path.dirname(self.memory_file), exist_ok=True)
-        
-        # Load the memory file, create an empty structure if it doesn’t exist
-        if not os.path.exists(self.memory_file):
-            self.save_memories([])  # Initialize with an empty memory list
-        
-        with open(self.memory_file, "r") as file:
-            data = yaml.safe_load(file) or {}
-            return data.get("memories", [])
 
-    def save_memories(self, memories=None):
-        if memories is not None:
-            self.memories = memories
+        if os.path.exists(self.memory_file):
+            with open(self.memory_file, "r") as file:
+                memories = json.load(file)
+        else:
+            memories = []  # If no memories exist, start with an empty list.
+        return memories
+
+    def save_memories(self):
+        """Save memories to a JSON file."""
         with open(self.memory_file, "w") as file:
-            yaml.dump({"memories": self.memories}, file)
+            json.dump(self.memories, file, indent=2)
 
     def add_memory(self, content, category="general", priority=3):
         timestamp = datetime.now().isoformat()
@@ -54,12 +53,6 @@ class MemoryManager:
     def get_active_memories(self):
         # Return only active memories for use in context
         return [m for m in self.memories if m.get("active", True)]
-
-    def remember(self, text, category="general", priority=3):
-        """Summarizes the text using the LLM and stores it as a memory."""
-        summary = self.llm.generate_summary(text)  # Summarize using the LLM interface
-        if summary:
-            self.add_memory(summary, category, priority)
 
     def remember(self, text, category="general", priority=3):
         """Summarizes the text using the LLM and stores it as a memory."""

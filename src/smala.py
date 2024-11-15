@@ -30,7 +30,10 @@ def summarize_and_save(conversation, memory_manager, conversation_file):
     """Summarize the conversation and save it to memories."""
     llm = LLMInterface()
     conversation_text = "\n".join([entry["content"] for entry in conversation])
-    summary = llm.generate_response([{"role": "user", "content": f"Summarize the following conversation:\n{conversation_text}"}])
+    summary = llm.generate_response(
+            [{"role": "user", "content": conversation_text}],
+            system_message=llm.settings.get("system_message_how_to_extract_relevant_info_for_memory")
+    )
 
     if summary:
         memory_manager.add_memory(content=summary, category="conversation_summary", priority=llm.settings.get("priority_conversation_summaries"))
