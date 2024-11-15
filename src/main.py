@@ -87,8 +87,6 @@ def main():
 
     print("Welcome to the Local LLM Assistant!")
 
-    first_prompt = True  # Flag to track if it's the first prompt of the conversation
-
     try:
         while True:
             prompt = input("\nYou: ")
@@ -103,22 +101,21 @@ def main():
                 else:
                     print("Conversation not summarized. Exiting...")
                 sys.exit(0)
-            
-            message_history = []
 
+            # Include user input in the conversation
             conversation.append({"role": "user", "content": prompt})
 
-            if first_prompt:
-                # Include active memories in the prompt context
-                active_memories = memory_manager.get_active_memories()
-                memory_context = "Here are some memories from previous conversations (use these to be as helpful as possible when relevant):\n"
-                memory_context += "\n".join([m["content"] for m in active_memories])
-                message_history.append({"role": "system", "content": memory_context})
-                first_prompt = False  # Mark first prompt as processed
+            # Include active memories in the prompt context
+            active_memories = memory_manager.get_active_memories()
+            memory_context = "Here are some memories from previous conversations (use these to be as helpful as possible when relevant):\n"
+            memory_context += "\n".join([m["content"] for m in active_memories])
+            messages = {"role": "system", "content": memory_context}
 
-            message_history.extend(conversation)
+            # Append the entire conversation history (including user's and assistant's messages)
+            messages.extend(conversation)
 
-            response = llm.generate_response(message_history)
+            # Send the entire message history (system + conversation) to the API
+            response = llm.generate_response(messages)
 
             # Get the response based on the full message history
             if response:
@@ -134,6 +131,8 @@ def main():
         # Handle unexpected shutdown (Ctrl+C)
         print("\nProgram interrupted.")
         handle_exit(conversation, memory_manager, conversation_file, None, None)
+
+
 
 if __name__ == "__main__":
     main()
