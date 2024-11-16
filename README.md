@@ -1,3 +1,7 @@
+<div align="center">
+ <img alt="smala" height="200px" src="">
+</div>
+
 # smala
 
 A simple memory-aided language assistant.
