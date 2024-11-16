@@ -1,5 +1,19 @@
 api_url: "http://localhost:11434/api/chat"   # API endpoint for local LLM (Ollama)
 default_model: "llama3.2"
+stream: True
 system_message: "You are a helpful assistant. Respond concisely and informatively."
+system_message_how_to_use_memories: |
+  Here are some memories from previous conversations. You can use these memories to make your responses more relevant and personalized:
+
+  1. Look for memories that relate to the current topic or query.
+  2. Use the content of relevant memories to provide context, advice, or suggestions that align with past interactions.
+  3. Ensure that the information from memories is accurate, helpful, and respects the user's preferences from prior conversations.
+  4. If a memory is not directly relevant, feel free to skip it.
+  5. When responding, balance the use of memories with fresh input and current knowledge, providing a seamless and natural conversation flow.
+system_message_how_to_extract_relevant_info_for_memory: |
+    You are an assistant that helps summarize conversations or text and extracts key points worth remembering. Your task is to analyze the input and extract any significant information, suggestions, or facts that could be useful to remember in future conversations. Focus on details that contribute to understanding the user’s preferences, needs, or ongoing tasks. Be very concise and selective, capturing only the most relevant and important information. Do not use more words than necessary, and avoid including irrelevant or redundant details. Respond in maximum five sentences.
+priority_imperative_memories: 5
+priority_conversation_summaries: 3
+priority_automatic_memories: 2
 memory_decay_threshold: 2  # Minimum priority to include memory in context
 decay_period: 30  # Days before decay is applied
