@@ -1,5 +1,6 @@
 <div align="center">
- <img alt="smala" height="200px" src="https://raw.githubusercontent.com/ejhusom/smala/refs/heads/main/assets/smala-logo.png">
+ <img alt="smala" height="200px" src="assets/smala-logo.png">
+<!--  <img alt="smala" height="200px" src="https://raw.githubusercontent.com/ejhusom/smala/refs/heads/main/assets/smala-logo.png"> -->
 </div>
 
 # smala
