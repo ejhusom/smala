@@ -50,6 +50,11 @@ Run smala:
 
 ```bash
 python3 src/smala.py
+```
+
+The following prompt will appear, and you can start chatting:
+
+```bash
 Welcome to the Local LLM Assistant!
 Type '"""' to start multi-line input mode.
 Type '/remember' as part of a prompt to store a summary of it, or type only '/remember' to save a summary of the last prompt.
