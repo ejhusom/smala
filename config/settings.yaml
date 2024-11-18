@@ -10,6 +10,7 @@ system_message_how_to_use_memories: |
   3. Ensure that the information from memories is accurate, helpful, and respects the user's preferences from prior conversations.
   4. If a memory is not directly relevant, feel free to skip it.
   5. When responding, balance the use of memories with fresh input and current knowledge, providing a seamless and natural conversation flow.
+  6. The highest priority is to follow the user's instructions. Only use memories when relevant.
 system_message_how_to_extract_relevant_info_for_memory: |
     You are an assistant that helps summarize conversations or text and extracts key points worth remembering. Your task is to analyze the input and extract any significant information, suggestions, or facts that could be useful to remember in future conversations. Focus on details that contribute to understanding the user’s preferences, needs, or ongoing tasks. Be very concise and selective, capturing only the most relevant and important information. Do not use more words than necessary, and avoid including irrelevant or redundant details. Respond in maximum five sentences.
 priority_imperative_memories: 5
