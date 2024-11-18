@@ -6,9 +6,19 @@
 
 A simple memory-aided language assistant.
 
+Chat with any local language model of your choice, and let smala help you with storing essential information across conversations.
+
+smala works with any language model used through [Ollama](https://ollama.com/), and lets you build (automatically or manually) your own archive of memories that you want the language model to use while chatting with it.
+
+The smala tool is designed aroudn the following principles:
+
+- **Privacy**: Designed to work with local models, enabling you to freely use personal and sensitive information without worrying about data collection.
+- **Flexibility**: Use any open-weights language model that is available through Ollama, and swap between them without losing any information.
+- **Control**: Customize the instructions given to the model on how to extract and use memories.
 
 ## Quickstart
 
+You need to have [Ollama](https://ollama.com/) installed, with the language models you want to use.
 
 Clone repository:
 
@@ -30,7 +40,7 @@ Install requirements:
 pip3 install -r requirements.txt
 ```
 
-Update `config/settings.yaml` with your desired setup.
+Update `config/settings.yaml` with your desired setup, most importantly which language model you want to use (make sure you have it installed through Ollama).
 
 Run smala:
 
