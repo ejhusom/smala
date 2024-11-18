@@ -22,7 +22,7 @@ The smala tool is designed around the following principles:
 
 ## Quickstart
 
-You need to have [Ollama](https://ollama.com/) installed, with the language models you want to use.
+You need to have [Ollama](https://ollama.com/) installed, and download the language model(s) you want to use (Ollama provides a large number of models).
 
 Clone repository:
 
