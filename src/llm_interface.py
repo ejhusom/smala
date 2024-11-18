@@ -8,18 +8,23 @@ class LLMInterface:
         self.settings = load_settings()
         self.api_url = self.settings.get("api_url")
         self.model = self.settings.get("default_model")
-        self.system_message = self.settings.get("system_message")  # Get system message from settings
+        self.system_message = self.settings.get("system_message")
+
+    def _post_request(self, data):
+        """Internal helper to send a post request and handle exceptions."""
+        try:
+            response = requests.post(self.api_url, json=data, stream=data.get("stream", False))
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
 
     def generate_response(self, message_history, system_message=None):
-        """Generate a response based on the message history"""
-
+        """Generate a response based on the message history."""
         if isinstance(message_history, str):
-            message_history = [message]
-
-        if not isinstance(message_history, list):
-            raise ValueError("Message history should be a list of messages")
-
-        # Prepare the data for the API request
+            message_history = [message_history]
+        
         data = {
             "model": self.model,
             "system_message": system_message or self.system_message,
@@ -27,26 +32,13 @@ class LLMInterface:
             "stream": False
         }
 
-        print(data)
-
-        try:
-            response = requests.post(self.api_url, json=data)
-            response.raise_for_status()  # Raises HTTPError for bad responses
-            return response.json().get("message").get("content")
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
-            return None
+        response = self._post_request(data)
+        if response:
+            return response.json().get("message", {}).get("content", "Error: No content received.")
+        return None
 
     def generate_streaming_response(self, message_history):
-        """Generate a streaming response and return the full content"""
-
-        if isinstance(message_history, str):
-            message_history = [message_history]
-
-        if not isinstance(message_history, list):
-            raise ValueError("Message history should be a list of messages")
-
-        # Prepare the data for the API request with streaming enabled
+        """Generate a streaming response and return the full content."""
         data = {
             "model": self.model,
             "system_message": self.system_message,
@@ -54,14 +46,10 @@ class LLMInterface:
             "stream": True
         }
 
-        print(data)
+        full_response = []
+        response = self._post_request(data)
 
-        full_response = []  # To accumulate the full response
-
-        try:
-            response = requests.post(self.api_url, json=data, stream=True)
-            response.raise_for_status()  # Raises HTTPError for bad responses
-
+        if response:
             print("Assistant: ", end="", flush=True)
             for chunk in response.iter_lines():
                 if chunk:
@@ -69,19 +57,11 @@ class LLMInterface:
                         chunk_data = json.loads(chunk.decode("utf-8"))
                         message_content = chunk_data.get("message", {}).get("content", "")
                         print(message_content, end="", flush=True)
-
-                        # Append content to the full response
                         full_response.append(message_content)
-
                         if chunk_data.get("done"):
                             break
                     except json.JSONDecodeError as e:
                         print("\nError decoding JSON:", e)
-            print("\n")  # Newline after streaming ends
-
-            # Return the full response as a single string
+            print("\n")
             return "".join(full_response)
-
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
-            return None
+        return None

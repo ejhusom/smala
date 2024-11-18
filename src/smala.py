@@ -5,71 +5,18 @@ import sys
 import json
 from llm_interface import LLMInterface
 from memory_manager import MemoryManager
+from utils import save_conversation_to_file, load_conversation_from_file, get_multiline_input
 from datetime import datetime
-
-
-def load_conversation_from_file(file_path):
-    """Load a conversation from a JSON file."""
-    if not os.path.exists(file_path):
-        print(f"Warning: No existing conversation found at {file_path}. Starting a new conversation.")
-        return []
-
-    with open(file_path, "r") as file:
-        conversation = json.load(file)
-
-    return conversation
-
-
-def save_conversation_to_file(conversation, file_path):
-    """Save the conversation to a JSON file"""
-    with open(file_path, "w") as file:
-        json.dump(conversation, file, indent=2)
-
-
-def summarize_and_save(conversation, memory_manager, conversation_file):
-    """Summarize the conversation and save it to memories."""
-    llm = LLMInterface()
-    conversation_text = "\n".join([entry["content"] for entry in conversation])
-    summary = llm.generate_response(
-            [{"role": "user", "content": conversation_text}],
-            system_message=llm.settings.get("system_message_how_to_extract_relevant_info_for_memory")
-    )
-
-    if summary:
-        memory_manager.add_memory(content=summary, category="conversation_summary", priority=llm.settings.get("priority_conversation_summaries"))
-        print("Assistant: The conversation has been summarized and saved.")
-
-        # Add summary to conversation as well
-        conversation.append({"role": "assistant", "content": summary})
-
-        save_conversation_to_file(conversation, conversation_file)
-
-    return summary
 
 
 def handle_exit(conversation, memory_manager, conversation_file, signal, frame):
     """Graceful exit handler to summarize and save the conversation """
     print("\nGracefully shutting down.")
     print("Summarizing conversation...")
-    summarize_and_save(conversation, memory_manager, conversation_file)
+    memory_manager.summarize_and_save(conversation, conversation_file)
     print("Conversation summary saved. Exiting...")
     sys.exit(0)
 
-
-def prompt2json(prompt, role="user"):
-    """Convert a prompt string to a JSON object"""
-    return {"role": role, "content": prompt}
-
-
-def get_multiline_input(line=""):
-    """Allow multi-line input using triple quotes to start and end."""
-    lines = [line]
-    while True:
-        line = input(">>> ")
-        if line.strip() == '"""':  # End multi-line input if '"""' is typed
-            break
-        lines.append(line)
-    return "\n".join(lines)  # Combine all lines into a single string
 
 def initialize_conversation(args):
     """Initialize conversation from file or create a new conversation file path."""
@@ -152,7 +99,7 @@ def main():
                 summary_response = input("Would you like to summarize the conversation? (y/n): ")
                 if summary_response.lower() == "y":
                     print("Summarizing conversation...")
-                    summarize_and_save(conversation, memory_manager, conversation_file)
+                    memory_manager.summarize_and_save(conversation, conversation_file)
                     print("Conversation summary saved. Exiting...")
                 else:
                     print("Conversation not summarized. Exiting...")
@@ -164,7 +111,11 @@ def main():
                     # Remember the previous prompt if available
                     last_user_message = conversation[-1]["content"] if conversation else ""
                     if last_user_message:
-                        memory_manager.remember(last_user_message)
+                        memory_manager.remember(
+                                    last_user_message, 
+                                    category="imperative_memory",
+                                    priority=llm.settings.get("priority_imperative_memories")
+                        )
                 else:
                     # Remember the current prompt, minus the /remember part
                     memory_content = prompt.replace("/remember", "").strip()

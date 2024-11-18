@@ -1,6 +1,8 @@
 import os
 import json
+import fcntl
 from datetime import datetime, timedelta
+from utils import save_conversation_to_file
 
 class MemoryManager:
     def __init__(self, memory_file="memories/memory.json", decay_threshold=2, decay_days=30, llm=None):
@@ -11,21 +13,23 @@ class MemoryManager:
         self.memories = self.load_memories()
 
     def load_memories(self):
-        """Load memories from a JSON file."""
-        # Ensure the directory exists
+        """Load memories with file lock for concurrency safety."""
         os.makedirs(os.path.dirname(self.memory_file), exist_ok=True)
+        memories = []
 
         if os.path.exists(self.memory_file):
             with open(self.memory_file, "r") as file:
+                fcntl.flock(file, fcntl.LOCK_SH)
                 memories = json.load(file)
-        else:
-            memories = []  # If no memories exist, start with an empty list.
+                fcntl.flock(file, fcntl.LOCK_UN)
         return memories
 
     def save_memories(self):
-        """Save memories to a JSON file."""
+        """Save memories with file lock for concurrency safety."""
         with open(self.memory_file, "w") as file:
+            fcntl.flock(file, fcntl.LOCK_EX)
             json.dump(self.memories, file, indent=2)
+            fcntl.flock(file, fcntl.LOCK_UN)
 
     def add_memory(self, content, category="general", priority=3):
         timestamp = datetime.now().isoformat()
@@ -44,10 +48,8 @@ class MemoryManager:
     def apply_decay(self):
         cutoff_date = datetime.now() - timedelta(days=self.decay_days)
         for memory in self.memories:
-            memory_date = datetime.fromisoformat(memory["timestamp"])
-            if memory["priority"] < self.decay_threshold and memory_date < cutoff_date:
-                memory["active"] = False  # Mark as inactive if decayed
-
+            if memory["priority"] < self.decay_threshold and datetime.fromisoformat(memory["timestamp"]) < cutoff_date:
+                memory["active"] = False
         self.save_memories()
 
     def get_active_memories(self):
@@ -61,11 +63,31 @@ class MemoryManager:
         # Generate the summary or relevant info from the LLM
         summary = self.llm.generate_response(
                 message_history, 
-                system_message=self.llm.settings.get("system_message_how_to_extract_relevant_info_for_memory")
+                system_message=self.llm.settings.get("system_message_how_to_remember_information_in_prompt")
         )
 
         if summary:
             self.add_memory(summary, category, priority)
+
+
+    def summarize_and_save(self, conversation, conversation_file):
+        """Summarize the conversation and save it to memories."""
+        conversation_text = "\n".join([entry["content"] for entry in conversation])
+        summary = self.llm.generate_response(
+                [{"role": "user", "content": conversation_text}],
+                system_message=self.llm.settings.get("system_message_how_to_extract_relevant_info_for_memory")
+        )
+
+        if summary:
+            self.add_memory(content=summary, category="conversation_summary", priority=self.llm.settings.get("priority_conversation_summaries"))
+            print("Assistant: The conversation has been summarized and saved.")
+
+            # Add summary to conversation as well
+            conversation.append({"role": "assistant", "content": summary})
+
+            save_conversation_to_file(conversation, conversation_file)
+
+        return summary
 
     def build_memory_context(self):
         """Retrieve and format active memories for conversation context."""
