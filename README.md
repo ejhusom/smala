@@ -10,7 +10,7 @@ Chat with any local language model, and let smala help you with storing essentia
 
 ## What does smala do?
 
-When you chat with a language model through smala, you can make the tool "remember" certain information ("memories"), either by given an explicit instruction (`/remember`), or by letting smala automatically summarize your conversation. These "memories" will then be available in later chats through smala, whatever language model you choose to use.
+When you chat with a language model through smala, you can make the tool "remember" certain information ("memories"), either by giving an explicit instruction (`/remember`), or by letting smala automatically summarize your conversation. These "memories" will then be available in later chats through smala, whatever language model you choose to use.
 
 smala works with any language model used through [Ollama](https://ollama.com/), and lets you build (automatically or manually) your own archive of memories that you want the language model to use while chatting with it.
 
