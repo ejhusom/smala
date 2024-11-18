@@ -6,7 +6,7 @@
 
 A simple memory-aided language assistant.
 
-Chat with any local language model, and let smala help you with storing essential information across conversations.
+Chat with any local language model, and let smala help you by storing essential information across conversations.
 
 ## What does smala do?
 
@@ -16,7 +16,7 @@ smala works with any language model used through [Ollama](https://ollama.com/), 
 
 The smala tool is designed around the following principles:
 
-- **Privacy**: Designed to work with local models, enabling you to freely use personal and sensitive information without worrying about data collection.
+- **Privacy**: Works with local models, enabling you to freely use personal and sensitive information without worrying about data collection.
 - **Flexibility**: Use any open-weights language model that is available through Ollama, and swap between them without losing any information.
 - **Control**: Customize the instructions given to the model on how to extract and use memories. Easily add and remove memories.
 
@@ -26,13 +26,13 @@ You need to have [Ollama](https://ollama.com/) installed, and download the langu
 
 Clone repository:
 
-```
+```bash
 git clone https://github.com/ejhusom/smala
 ```
 
 Create and activate a virtual environment (optional):
 
-```
+```bash
 mkdir venv
 python3 -m venv venv
 source venv/bin/activate
@@ -40,7 +40,7 @@ source venv/bin/activate
 
 Install requirements:
 
-```
+```bash
 pip3 install -r requirements.txt
 ```
 
@@ -48,8 +48,13 @@ Update `config/settings.yaml` with your desired setup, most importantly which la
 
 Run smala:
 
-```
+```bash
 python3 src/smala.py
+Welcome to the Local LLM Assistant!
+Type '"""' to start multi-line input mode.
+Type '/remember' as part of a prompt to store a summary of it, or type only '/remember' to save a summary of the last prompt.
+Type '/exit' to quit. On exit, you will be asked whether a summary of the conversation should be saved as a 'memory'.
+>>>
 ```
 
 

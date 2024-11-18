@@ -136,7 +136,7 @@ def main():
     print("Welcome to the Local LLM Assistant!")
     print("Type '\"\"\"' to start multi-line input mode.")
     print("Type '/remember' as part of a prompt to store a summary of it, or type only '/remember' to save a summary of the last prompt.")
-    print("Type '/exit' to exit.")
+    print("Type '/exit' to quit. On exit, you will be asked whether a summary of the conversation should be saved as a 'memory'.")
 
 
     while True:
