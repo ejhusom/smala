@@ -20,6 +20,15 @@ The smala tool is designed around the following principles:
 - **Flexibility**: Use any open-weights language model that is available through Ollama, and swap between them without losing any information.
 - **Control**: Customize the instructions given to the model on how to extract and use memories. Easily add and remove memories.
 
+## How does smala work?
+
+smala lets you chat with an LLM, but unlike other tools, it will automatically summarize your conversations and save those summaries as memories.
+You may also tell smala explicitly to remember certain pieces of information, by using the `/remember` command.
+
+Automatic creation of memories during the conversations is a planned feature, as indicated by the faded box in the diagram below.
+
+![Conceptual diagram of smala.](assets/smala-diagram.png)
+
 ## Quickstart
 
 You need to have [Ollama](https://ollama.com/) installed, and download the language model(s) you want to use (Ollama provides a large number of models).

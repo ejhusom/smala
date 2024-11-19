@@ -32,7 +32,8 @@ class LLMInterface:
             "stream": False
         }
 
-        print(data)
+        if self.settings.get("verbose"): 
+            print(data)
 
         response = self._post_request(data)
         if response:
@@ -48,7 +49,8 @@ class LLMInterface:
             "stream": True
         }
 
-        print(data)
+        if self.settings.get("verbose"): 
+            print(data)
 
         full_response = []
         response = self._post_request(data)

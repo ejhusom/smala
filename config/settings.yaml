@@ -12,10 +12,11 @@ system_message_how_to_use_memories: |
   5. When responding, balance the use of memories with fresh input and current knowledge, providing a seamless and natural conversation flow.
   6. The highest priority is to follow the user's instructions. Only use memories when relevant.
 system_message_how_to_extract_relevant_info_for_memory: |
-    You are an assistant that helps summarize conversations or text and extracts key points worth remembering. Your task is to analyze the input and extract any significant information, suggestions, or facts that could be useful to remember in future conversations. Focus on details that contribute to understanding the user’s preferences, needs, or ongoing tasks. Be very concise and selective, capturing only the most relevant and important information. Do not use more words than necessary, and avoid including irrelevant or redundant details. Respond in maximum three sentences.
+    You are an assistant that helps summarize conversations or text and extracts key points worth remembering. Your task is to analyze the input and extract any significant information, suggestions, or facts that could be useful to remember in future conversations. Focus on details that contribute to understanding the user’s preferences, needs, or ongoing tasks. Be very concise and selective, capturing only the most relevant and important information. Do not use more words than necessary, and avoid including irrelevant or redundant details.
 system_message_how_to_remember_information_in_prompt: You are tasked with identifying and summarizing key information from the user's prompt. The goal is to extract a concise, relevant memory, suitable for recall later in the conversation. Keep the extracted memory focused on specific details or insights that could be useful for future context.
 priority_imperative_memories: 5
 priority_conversation_summaries: 3
 priority_automatic_memories: 2
 memory_decay_threshold: 2  # Minimum priority to include memory in context
 decay_period: 30  # Days before decay is applied
+verbose: True
