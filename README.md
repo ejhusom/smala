@@ -8,10 +8,10 @@ A simple memory-aided language assistant.
 
 Chat with any local language model, and let smala help you by storing essential information across conversations.
 
-[What does smala do?](#what-does-smala-do)
-[Quickstart](#quickstart)
-[How does smala work?](#how-does-smala-work)
-[About](#about)
+- [What does smala do?](#what-does-smala-do)
+- [Quickstart](#quickstart)
+- [How does smala work?](#how-does-smala-work)
+- [About](#about)
 
 ## What does smala do?
 
