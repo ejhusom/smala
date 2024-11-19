@@ -8,6 +8,11 @@ A simple memory-aided language assistant.
 
 Chat with any local language model, and let smala help you by storing essential information across conversations.
 
+[What does smala do?](#what-does-smala-do)
+[Quickstart](#quickstart)
+[How does smala work?](#how-does-smala-work)
+[About](#about)
+
 ## What does smala do?
 
 When you chat with a language model through smala, you can make the tool "remember" certain information ("memories"), either by giving an explicit instruction (`/remember`), or by letting smala automatically summarize your conversation. These "memories" will then be available in later chats through smala, whatever language model you choose to use.
@@ -19,15 +24,6 @@ The smala tool is designed around the following principles:
 - **Privacy**: Works with local models, enabling you to freely use personal and sensitive information without worrying about data collection.
 - **Flexibility**: Use any open-weights language model that is available through Ollama, and swap between them without losing any information.
 - **Control**: Customize the instructions given to the model on how to extract and use memories. Easily add and remove memories.
-
-## How does smala work?
-
-smala lets you chat with an LLM, but unlike other tools, it will automatically summarize your conversations and save those summaries as memories.
-You may also tell smala explicitly to remember certain pieces of information, by using the `/remember` command.
-
-Automatic creation of memories during the conversations is a planned feature, as indicated by the faded box in the diagram below.
-
-![Conceptual diagram of smala.](assets/smala-diagram.png)
 
 ## Quickstart
 
@@ -71,6 +67,18 @@ Type '/exit' to quit. On exit, you will be asked whether a summary of the conver
 >>>
 ```
 
+## How does smala work?
+
+![Conceptual diagram of smala.](assets/smala-diagram.png)
+
+smala lets you chat with an LLM, but unlike other tools, it will automatically summarize your conversations and save those summaries as memories.
+You may also tell smala explicitly to remember certain pieces of information, by using the `/remember` command.
+
+Automatic creation of memories during the conversations is a planned feature, as indicated by the faded box in the diagram above.
+
+The sequence diagram below illustrates how smala works.
+
+![Sequence diagram of smala.](assets/smala-sequence-diagram.png)
 
 ## About
 
