@@ -59,10 +59,13 @@ class MemoryManager:
     def remember(self, text, category="general", priority=3):
         """Summarizes the text using the LLM and stores it as a memory."""
         # Prepare the message history for summarization
-        message_history = [{"role": "user", "content": text}]
+        messages = [
+                {"role": "user", "content": self.llm.settings.get("system_message_how_to_remember_information_in_prompt")},
+                {"role": "user", "content": text}
+        ]
         # Generate the summary or relevant info from the LLM
         summary = self.llm.generate_response(
-                message_history, 
+                messages, 
                 system_message=self.llm.settings.get("system_message_how_to_remember_information_in_prompt")
         )
 
@@ -73,8 +76,12 @@ class MemoryManager:
     def summarize_and_save(self, conversation, conversation_file):
         """Summarize the conversation and save it to memories."""
         conversation_text = "\n".join([entry["content"] for entry in conversation])
+        messages = [
+                {"role": "user", "content": self.llm.settings.get("system_message_how_to_extract_relevant_info_for_memory")},
+                {"role": "user", "content": conversation_text}
+        ]
         summary = self.llm.generate_response(
-                [{"role": "user", "content": conversation_text}],
+                messages,
                 system_message=self.llm.settings.get("system_message_how_to_extract_relevant_info_for_memory")
         )
 

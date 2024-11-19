@@ -32,6 +32,8 @@ class LLMInterface:
             "stream": False
         }
 
+        print(data)
+
         response = self._post_request(data)
         if response:
             return response.json().get("message", {}).get("content", "Error: No content received.")
@@ -45,6 +47,8 @@ class LLMInterface:
             "messages": message_history,
             "stream": True
         }
+
+        print(data)
 
         full_response = []
         response = self._post_request(data)
