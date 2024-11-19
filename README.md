@@ -8,14 +8,14 @@ A simple memory-aided language assistant.
 
 Chat with any local language model, and let smala help you by storing essential information across conversations.
 
-- [What does smala do?](#what-does-smala-do)
+- [What is smala?](#what-is-smala)
 - [Quickstart](#quickstart)
 - [How does smala work?](#how-does-smala-work)
 - [About](#about)
 
-## What does smala do?
+## What is smala?
 
-When you chat with a language model through smala, you can make the tool "remember" certain information ("memories"), either by giving an explicit instruction (`/remember`), or by letting smala automatically summarize your conversation. These "memories" will then be available in later chats through smala, whatever language model you choose to use.
+smala is a tool for interacting with LLMs without starting from scratch in every conversation. When you chat with a language model through smala, you can make the tool "remember" certain information ("memories"), either by giving an explicit instruction (`/remember`), or by letting smala automatically summarize your conversation. These "memories" will then be available in later chats through smala, whatever language model you choose to use.
 
 smala works with any language model used through [Ollama](https://ollama.com/), and lets you build (automatically or manually) your own archive of memories that you want the language model to use while chatting with it.
 
